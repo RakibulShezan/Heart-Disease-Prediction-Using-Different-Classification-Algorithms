@@ -1,15 +1,18 @@
 %sql
+
 select * 
 from heartdisease_data;
 
 
-Total Patients Based on Chest Pain Type
+/*Total Patients Based on Chest Pain Type*/
+
 %sql
 select cp,count(*) as Total
 from HEARTDISEASE_DATA
 group by cp
 
-Number of heart disease patient based on their age
+/*Number of heart disease patient based on their age*/
+
 %sql
 
 select age, count(target) AS TARGET
@@ -17,14 +20,14 @@ from heartdisease_data
 where target = 1
 group by age;
 
-Total Heart Disease Based on Cholesterol
+/*Total Heart Disease Based on Cholesterol*/
 
 %sql
 SELECT COUNT(TARGET)
 FROM HEARTDISEASE_DATA
 WHERE TARGET = 1 and CHOL>=200;  
 
-Total Heart  Disease Patients based on Sex
+/*Total Heart  Disease Patients based on Sex*/
 
 %sql
 SELECT SEX,COUNT(TARGET)
@@ -33,7 +36,8 @@ WHERE TARGET = 1
 GROUP BY SEX;
 
 
-Create a Sequence 
+/*Create a Sequence */
+
 %sql
 CREATE SEQUENCE "PERSON_SEQUENCE" START WITH 1 INCREMENT BY 1;
 
@@ -47,26 +51,29 @@ UPDATE heartdisease_data SET PERSON_ID = person_sequence.NEXTVAL;
 select * 
 from heartdisease_data;
 
-Create Views
+/*Create Views*/
+
 %script
 
 CREATE OR REPLACE VIEW HEARTDISEASE_VIEW
   AS SELECT PERSON_ID,AGE,SEX,CP,TRESTBPS,CHOL,FBS,RESTECG,THALACH,EXANG,OLDPEAK,SLOPE,CA,THAL,TARGET
   FROM heartdisease_data;
-Settings Table Creation
+  
+  
+/*Settings Table Creation*/
 %sql
 CREATE TABLE nn_settings (
   setting_name VARCHAR2(30),
   setting_value VARCHAR2(4000));
 
-Train Test Split
+/*Train Test Split*/
 %script
 
 CREATE OR REPLACE VIEW TRAIN_DATA_CLAS AS SELECT * FROM heartdisease_view SAMPLE (70) SEED (1);
 CREATE OR REPLACE VIEW TEST_DATA_CLAS AS SELECT * FROM heartdisease_view MINUS SELECT * FROM TRAIN_DATA_CLAS;
 
 
-Decision Tree
+/*Decision Tree*/
 %script
 
 BEGIN DBMS_DATA_MINING.DROP_MODEL('CLASS_MODEL');
@@ -88,7 +95,7 @@ BEGIN
         'TARGET');
 END;
 
-Naive Bayes
+/*Naive Bayes*/
 
 %script
 
@@ -111,7 +118,7 @@ BEGIN
         'TARGET');
 END;
 
-Random Forest
+/*Random Forest*/
 %script
 
 BEGIN DBMS_DATA_MINING.DROP_MODEL('RANDOM_FOREST');
@@ -133,7 +140,7 @@ BEGIN
         'TARGET');
 END;
 
-Support Vector Machine
+/*Support Vector Machine*/
 %script
 
 BEGIN DBMS_DATA_MINING.DROP_MODEL('SVM');
@@ -155,7 +162,8 @@ BEGIN
         'TARGET');
 END;
 
-Neural Network%script
+/*Neural Network%script*/
+
 BEGIN EXECUTE IMMEDIATE 'DELETE FROM nn_settings PURGE';
     
 EXCEPTION WHEN OTHERS THEN NULL; END;
@@ -184,7 +192,7 @@ settings_table_name => 'nn_settings');
 END;
 /
 
-Evaluate Model: DECISION TREE
+/*Evaluate Model: DECISION TREE*/
 
 %script
 BEGIN EXECUTE IMMEDIATE 'DROP TABLE APPLY_RESULT_DT PURGE';
@@ -201,7 +209,7 @@ END;
 /
 
 
-Evaluate Model: NAIVE BAYES
+/*Evaluate Model: NAIVE BAYES*/
 
 %script
 BEGIN EXECUTE IMMEDIATE 'DROP TABLE APPLY_RESULT_NB PURGE';
@@ -216,7 +224,8 @@ BEGIN
                                 'LIFT_TABLE_NB','1','PREDICTION','PROBABILITY',100);
 END;
 /
-Evaluate Model: RANDOM FOREST
+
+/*Evaluate Model: RANDOM FOREST*/
 
 %script
 
@@ -233,7 +242,7 @@ BEGIN
 END;
 /
 
-Evaluate Model: SVM
+/*Evaluate Model: SVM*/
 
 %script
 BEGIN EXECUTE IMMEDIATE 'DROP TABLE APPLY_RESULT_SVM PURGE';
@@ -249,7 +258,7 @@ BEGIN
 END;
 /
 
-Evaluate Model: NEURAL NETWORKS
+/*Evaluate Model: NEURAL NETWORKS*/
 
 %script
 
@@ -265,7 +274,7 @@ BEGIN
                                 'LIFT_TABLE_NN','1','PREDICTION','PROBABILITY',100);
 END;
 
-Accuracy Measure on Test Data
+/*Accuracy Measure on Test Data*/
 
 %script
 SET FEEDBACK OFF;
@@ -381,7 +390,7 @@ DECLARE
       SET FEEDBACK ON;
 
 
-ACCURACY TABLE
+/*ACCURACY TABLE*/
 %sql
 CREATE TABLE MODEL_ACCURACY(
     MODEL VARCHAR2(20),
@@ -394,12 +403,12 @@ FROM MODEL_ACCURACY
 ORDER BY ACCURACY DESC;
 
 
-Confusion Matrix
+/*Confusion Matrix*/
 
 %sql
 SELECT * from nn_confusion_matrix;
 
-F1-SCORE
+/*F1-SCORE*/
 
 %script
 
@@ -440,7 +449,7 @@ SELECT PERSON_ID, PREDICTION PRED,ROUND(PROBABILITY,3) PROB, ROUND(COST,2) COST
   FROM APPLY_RESULT WHERE PREDICTION = 1 AND PROBABILITY > 0.5 
   ORDER BY PROBABILITY DESC;
 
-INTERACTIVE PREDICTIONS
+/*INTERACTIVE PREDICTIONS*/
 
 %sql 
 SELECT A.*, B.TARGET
@@ -451,7 +460,7 @@ SELECT A.*, B.TARGET
 %sql
 select * from test_data_clas;
 
-PREDICTION ON A NEW RECORD
+/*PREDICTION ON A NEW RECORD*/
 
 %sql
 SELECT ROUND(PREDICTION_PROBABILITY(neural_network, '1' USING 
