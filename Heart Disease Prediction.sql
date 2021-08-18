@@ -4,7 +4,7 @@ select *
 from heartdisease_data;
 
 
-/*Total Patients Based on Chest Pain Type*/
+--Total Patients Based on Chest Pain Type
 
 %sql
 select cp,count(*) as Total
